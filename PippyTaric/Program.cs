@@ -90,10 +90,11 @@ namespace PippyTaric
             //Events
             Game.OnUpdate += TaricUpdate;
             Drawing.OnDraw += TaricDraw;
-            Obj_AI_Hero.OnPlayAnimation += TaricAnimation;
-            Obj_AI_Hero.OnProcessSpellCast += TaricProcessSpell;
-            Orbwalking.AfterAttack += TaricAfterAttack;
-            Obj_AI_Hero.OnBuffAdd += TaricBuffAdd;
+            //Obj_AI_Hero.OnPlayAnimation += TaricAnimation;
+            //Obj_AI_Hero.OnProcessSpellCast += TaricProcessSpell;
+            //Orbwalking.AfterAttack += TaricAfterAttack;
+            //Obj_AI_Hero.OnBuffAdd += TaricBuffAdd;
+            //Obj_AI_Base.OnBuffRemove += TaricBuffRemove;
         }
 
         static void TaricMenuLoad()
@@ -334,6 +335,45 @@ namespace PippyTaric
             }
         }
 
+        private static void HealingManager()
+        {
+
+            bool HealSelf = TaricMenu.Item("ahSelf").GetValue<bool>();
+            bool HealOther = TaricMenu.Item("ahOther").GetValue<bool>();
+
+            int HealSelfSlider = TaricMenu.Item("ahSelfSlider").GetValue<Slider>().Value;
+            int HealOtherSlider = TaricMenu.Item("ahOtherSlider").GetValue<Slider>().Value;
+
+            List<Obj_AI_Hero> AllyList = ObjectManager.Get<Obj_AI_Hero>().ToList().FindAll(ally => ally.IsAlly);
+
+            if (!theQ.IsReady() || (!HealSelf && HealOther))
+            {
+                return;
+            }
+
+            if (HealSelf)
+            {
+                if (ObjectManager.Player.HealthPercent <= HealSelfSlider)
+                {
+                    theQ.CastOnUnit(ObjectManager.Player);
+                }
+            }
+
+            if (HealOther)
+            {
+                foreach (Obj_AI_Hero ally in AllyList)
+                {
+                    if (ObjectManager.Player.ServerPosition.Distance(ally.ServerPosition) <= spellInfo["qRange"])
+                    {
+                        if (ally.HealthPercent <= HealOtherSlider)
+                        {
+                            theQ.CastOnUnit(ally);
+                        }
+                    }
+                }
+            }
+        }
+
         private static void SpellWeaving()
         {
             if (SWcombo && penisOrb.ActiveMode == Orbwalking.OrbwalkingMode.Combo && target != null)
@@ -366,22 +406,7 @@ namespace PippyTaric
 
         }
 
-        private static void TaricAnimation(GameObject sender, GameObjectPlayAnimationEventArgs args)
-        {
-
-        }
-
-        private static void TaricProcessSpell(GameObject sender, GameObjectProcessSpellCastEventArgs args)
-        {
-
-        }
-
-        private static void TaricAfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-
-        }
-
-        private static void TaricBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
+        /*private static void TaricBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
         {
             if (TryDebug)
             {
@@ -403,7 +428,7 @@ namespace PippyTaric
             {
                 hasPassive = false;
             }
-        }
+        }*/
 
         private static bool GetPassiveState()
         {
