@@ -185,6 +185,8 @@ namespace PippyTaric
 
             hasPassive = ObjectManager.Player.HasBuff(buffName);
 
+            HealingManager();
+
             switch (penisOrb.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
