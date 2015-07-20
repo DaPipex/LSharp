@@ -165,7 +165,8 @@ namespace PippyTaric
             drawMenu.AddItem(new MenuItem("eRangeDraw", "Draw set E range")).SetValue(new Circle(true, pippyTaricColor));
             drawMenu.AddItem(new MenuItem("rRangeDraw", "Draw R Range")).SetValue(new Circle(true, pippyTaricColor));
             drawMenu.AddItem(new MenuItem("drawHide", "Hide Ranges if not available")).SetValue(false);
-            drawMenu.AddItem(new MenuItem("drawTarget", "Draw Orbwalker Target")).SetValue(true);
+            drawMenu.AddItem(new MenuItem("drawTarget", "Draw Target")).SetValue(true);
+            drawMenu.AddItem(new MenuItem("drawMode", "Draw Combo Mode")).SetValue(true);
             TaricMenu.AddSubMenu(drawMenu);
 
             TaricMenu.AddItem(new MenuItem("doDebug", "Debug Stuff?")).SetValue(true);
@@ -289,7 +290,7 @@ namespace PippyTaric
                     if (ObjectManager.Player.ServerPosition.Distance(target.ServerPosition) <= TaricMenu.Item("useErange")//fag
                         .GetValue<Slider>().Value)
                     {
-                        theE.Cast(target);
+                        theE.CastOnUnit(target);
                     }
                 }
             }
@@ -331,7 +332,7 @@ namespace PippyTaric
                 {
                     if (ObjectManager.Player.ServerPosition.Distance(target.ServerPosition) <= spellInfo["eRange"])
                     {
-                        theE.Cast(target);
+                        theE.CastOnUnit(target);
                     }
                 }
             }
@@ -405,7 +406,73 @@ namespace PippyTaric
 
         private static void TaricDraw(EventArgs args)
         {
+            bool HideNotReady = TaricMenu.Item("drawHide").GetValue<bool>();
+            Vector2 ScreenPos = Drawing.WorldToScreen(ObjectManager.Player.Position);
 
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+
+            if (TaricMenu.Item("qRangeDraw").GetValue<Circle>().Active)
+            {
+                if (!(!theQ.IsReady() && HideNotReady))
+                {
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spellInfo["qRange"],
+                        TaricMenu.Item("qRangeDraw").GetValue<Circle>().Color);
+                }
+            }
+
+            if (TaricMenu.Item("wRangeDraw").GetValue<Circle>().Active)
+            {
+                if (!(!theW.IsReady() && HideNotReady))
+                {
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spellInfo["wRange"],
+                        TaricMenu.Item("wRangeDraw").GetValue<Circle>().Color);
+                }
+            }
+
+            if (TaricMenu.Item("eRangeDrawMax").GetValue<Circle>().Active)
+            {
+                Render.Circle.DrawCircle(ObjectManager.Player.Position, spellInfo["eRange"],
+                    TaricMenu.Item("eRangeDrawMax").GetValue<Circle>().Color);       
+            }
+
+            if (TaricMenu.Item("eRangeDraw").GetValue<Circle>().Active)
+            {
+                if (!(!theE.IsReady() && HideNotReady))
+                {
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position,
+                        TaricMenu.Item("useErange").GetValue<Slider>().Value,
+                        TaricMenu.Item("eRangeDraw").GetValue<Circle>().Color);
+                }
+            }
+
+            if (TaricMenu.Item("eRangeDraw").GetValue<Circle>().Active)
+            {
+                if (!(!theR.IsReady() && HideNotReady))
+                {
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spellInfo["rRange"],
+                        TaricMenu.Item("rRangeDraw").GetValue<Circle>().Color);
+                }
+            }
+
+            if (TaricMenu.Item("drawTarget").GetValue<bool>() && target != null)
+            {
+                Render.Circle.DrawCircle(target.Position, target.BoundingRadius, Color.Orange, 8);
+            }
+
+            if (TaricMenu.Item("drawMode").GetValue<bool>())
+            {
+                if (TaricMenu.Item("toggleCombo").GetValue<KeyBind>().Active)
+                {
+                    Drawing.DrawText(ScreenPos[0] - 60, ScreenPos[1] + 50, Color.LimeGreen, "SpellWeaving ON");
+                }
+                else
+                {
+                    Drawing.DrawText(ScreenPos[0] - 60, ScreenPos[1] + 50, Color.Red, "SpellWeaving OFF");
+                }
+            }
         }
 
         /*private static void TaricBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
