@@ -7,7 +7,7 @@ using Color = System.Drawing.Color;
 
 using LeagueSharp;
 using LeagueSharp.Common;
-using LConsole = LeagueSharp.Console.Console;
+//using LConsole = LeagueSharp.Console.Console;
 using SharpDX;
 
 namespace PippyTaric
@@ -58,7 +58,7 @@ namespace PippyTaric
 
             MySpellInfo.Initialize();
             spellInfo = MySpellInfo.SpellTable;
-            LConsole.Show();
+            //LConsole.Show();
 
             //#NeverForgetPrintchat
             Notifications.AddNotification("Pippy Taric Loaded!", 10).SetTextColor(pippyTaricColor);
@@ -71,7 +71,6 @@ namespace PippyTaric
 
             //Spell type
             //theW.SetSkillshot(spellInfo["wDelay"], spellInfo["wRange"], float.PositiveInfinity, false, SkillshotType.SkillshotCircle);
-            theE.SetTargetted(spellInfo["eDelay"], spellInfo["eSpeed"]);
             //theR.SetSkillshot(spellInfo["rDelay"], spellInfo["rRange"], float.PositiveInfinity, false, SkillshotType.SkillshotCircle);
 
             //Do we have ignite? I mean, you, not "we" ayy lmao
@@ -169,7 +168,7 @@ namespace PippyTaric
             drawMenu.AddItem(new MenuItem("drawMode", "Draw Combo Mode")).SetValue(true);
             TaricMenu.AddSubMenu(drawMenu);
 
-            TaricMenu.AddItem(new MenuItem("doDebug", "Debug Stuff?")).SetValue(true);
+            //TaricMenu.AddItem(new MenuItem("doDebug", "Debug Stuff?")).SetValue(true);
 
             TaricMenu.AddToMainMenu();
         }
