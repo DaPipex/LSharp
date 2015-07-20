@@ -177,7 +177,7 @@ namespace PippyTaric
         {
             target = TargetSelector.GetTarget(GetTargetRange(), TargetSelector.DamageType.Magical);
 
-            TryDebug = TaricMenu.Item("doDebug").GetValue<bool>();
+            //TryDebug = TaricMenu.Item("doDebug").GetValue<bool>();
 
             SWcombo = TaricMenu.Item("toggleCombo").GetValue<KeyBind>().Active;
 
@@ -348,7 +348,7 @@ namespace PippyTaric
 
             List<Obj_AI_Hero> AllyList = ObjectManager.Get<Obj_AI_Hero>().ToList().FindAll(ally => ally.IsAlly);
 
-            if (!theQ.IsReady() || (!HealSelf && HealOther))
+            if (!theQ.IsReady() || (!HealSelf && !HealOther))
             {
                 return;
             }
@@ -447,7 +447,7 @@ namespace PippyTaric
                 }
             }
 
-            if (TaricMenu.Item("eRangeDraw").GetValue<Circle>().Active)
+            if (TaricMenu.Item("rRangeDraw").GetValue<Circle>().Active)
             {
                 if (!(!theR.IsReady() && HideNotReady))
                 {
