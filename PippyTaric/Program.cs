@@ -141,6 +141,7 @@ namespace PippyTaric
                 new KeyBind(90, KeyBindType.Toggle));
                 TaricMenu.AddSubMenu(comboMenu);
 
+            //Harass
             var harassMenu = new Menu("Harass Settings", "harass");
             harassMenu.AddItem(new MenuItem("useQharass", "Use Q in harass (only me)")).SetValue(true);
             harassMenu.AddItem(new MenuItem("useQharassSlider", "Min Hp% to heal")).SetValue(new Slider(75, 0, 100));
@@ -166,7 +167,13 @@ namespace PippyTaric
             drawMenu.AddItem(new MenuItem("drawHide", "Hide Ranges if not available")).SetValue(false);
             drawMenu.AddItem(new MenuItem("drawTarget", "Draw Target")).SetValue(true);
             drawMenu.AddItem(new MenuItem("drawMode", "Draw Combo Mode")).SetValue(true);
+            drawMenu.AddItem(new MenuItem("drawDamage", "Draw Damage on HealthBar")).SetValue(true);
             TaricMenu.AddSubMenu(drawMenu);
+
+            var miscMenu = new Menu("Misc Settings", "misc");
+            miscMenu.AddItem(new MenuItem("ksIgnite", "KS with Ignite")).SetValue(true);
+            miscMenu.AddItem(new MenuItem("interrupt", "Interrupt Skills")).SetValue(true);
+            TaricMenu.AddSubMenu(miscMenu);
 
             //TaricMenu.AddItem(new MenuItem("doDebug", "Debug Stuff?")).SetValue(true);
 
@@ -501,6 +508,54 @@ namespace PippyTaric
         private static bool GetPassiveState()
         {
             return hasPassive;
+        }
+
+        private static float CalculateSWDamage(Obj_AI_Hero faggot)
+        {
+            Obj_AI_Hero Taric = ObjectManager.Player;
+
+            int activeSpells = 0;
+
+            float finalDamage = 0f;
+
+            double spellDamage = 0d;
+
+            var basic = Taric.GetAutoAttackDamage(faggot);
+            var passive = Taric.CalcDamage(faggot, Damage.DamageType.Magical, 0.2f * Taric.Armor);
+            var totalBasic = basic + passive;
+
+            if (theQ.IsReady())
+            {
+                activeSpells += 1;
+            }
+
+            if (theW.IsReady())
+            {
+                activeSpells += 1;
+                spellDamage += Taric.GetSpellDamage(faggot, SpellSlot.W);
+            }
+
+            if (theE.IsReady())
+            {
+                activeSpells += 1;
+                spellDamage += Taric.GetSpellDamage(faggot, SpellSlot.E); //Needs precise tweaking
+            }
+
+            if (theR.IsReady())
+            {
+                activeSpells += 1;
+                spellDamage += Taric.GetSpellDamage(faggot, SpellSlot.R);
+            }
+
+
+            if (activeSpells > 0)
+            {
+                spellDamage += totalBasic * activeSpells;
+            }
+            else
+            {
+                spellDamage += totalBasic;
+            }
         }
     }
 }
