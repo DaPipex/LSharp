@@ -29,8 +29,6 @@ namespace WreckingBall
 
         private static Menu wbMenu;
 
-        private static Orbwalking.Orbwalker leeOrbwalker;
-
         private static readonly string[] qSpellNames = { string.Empty, "BlindMonkQOne", "BlindMonkQTwo" };
 
         private static readonly string[] wSpellNames = { string.Empty, "BlindMonkWOne", "BlindMonkWTwo" };
@@ -407,10 +405,6 @@ namespace WreckingBall
         private static void LoadMenu()
         {
             wbMenu = new Menu("Wrecking Ball (Bubba Kush)", "wreckingball", true);
-
-            var orbMenu = new Menu("Orbwalker Settings", "orbsettings");
-            leeOrbwalker = new Orbwalking.Orbwalker(orbMenu);
-            wbMenu.AddSubMenu(orbMenu);
 
             var mainMenu = new Menu("Main Settings", "mainsettings");
             mainMenu.AddItem(new MenuItem("bubbaKey", "Bubba Kush Key"))
