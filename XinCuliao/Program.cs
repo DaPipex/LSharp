@@ -39,6 +39,7 @@ namespace XinCuliao
         {
             semenMenu = new Menu("Chupa el pico", "pene", true);
             semenMenu.AddItem(new MenuItem("sexo", "Chupa el sexo")).SetValue(new KeyBind("p".ToCharArray()[0], KeyBindType.Press));
+            semenMenu.AddItem(new MenuItem("sexoanal", "PICO")).SetValue(false);
             semenMenu.AddItem(new MenuItem("patodos", "Decirlo pa todos los culiaos?")).SetValue(true);
             semenMenu.AddToMainMenu();
 
@@ -64,6 +65,15 @@ namespace XinCuliao
                         Game.Say(mensajeList[elegir]);
                     }
 
+                    lastT = Environment.TickCount;
+                }
+            }
+
+            if (semenMenu.Item("sexoanal").GetValue<bool>())
+            {
+                if (Environment.TickCount > lastT + 1000)
+                {
+                    Game.Say("/all PICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICO");
                     lastT = Environment.TickCount;
                 }
             }
