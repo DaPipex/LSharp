@@ -37,6 +37,8 @@ namespace WreckingBall
 
         private static readonly string rSpellName = "BlindMonkRKick";
 
+        private static int lastWjTick;
+
         private static bool bubbaKushing;
 
 
@@ -146,6 +148,7 @@ namespace WreckingBall
 
             rTarget = inRangeHeroes.Any() ? ReturnMostHp(inRangeHeroes) : null;
 
+            //Select less HP target
             if (rTarget != null)
             {
                 List<Obj_AI_Hero> secondTargets =
@@ -222,23 +225,78 @@ namespace WreckingBall
 
         private static void BubbaKush()
         {
-            if (spellR.Instance.State == SpellState.NotLearned || !spellR.Instance.IsReady() || !flashSlot.IsReady())
+            if (spellR.Instance.State == SpellState.NotLearned || !spellR.Instance.IsReady())
             {
                 return;
             }
 
-            if (leeHero.Distance(rTarget) > spellR.Range)
-            {
-                leeHero.IssueOrder(GameObjectOrder.MoveTo, rTarget.ServerPosition);
-            }
-            else
-            {
-                var flashVector = GetFlashVector();
+            var flashVector = GetFlashVector();
 
-                spellR.Cast(rTarget);
+            var doFlash = wbMenu.Item("useFlash").GetValue<bool>();
+            var doWardjump = wbMenu.Item("useWardjump").GetValue<bool>();
+
+            if (leeHero.Distance(flashVector) < 400 && CanWardJump() && doWardjump)
+            {
+                WardJumpTo(flashVector);
+                Utility.DelayAction.Add((int)(GetWardjumpTime(flashVector) * 1000),
+                    () =>
+                        { spellR.CastOnUnit(rTarget); });
+            }
+            else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash)
+            {
+                spellR.CastOnUnit(rTarget);
 
                 leeHero.Spellbook.CastSpell(flashSlot, flashVector);
             }
+            else
+            {
+                if (leeHero.Distance(flashVector) > 100)
+                {
+                    leeHero.IssueOrder(GameObjectOrder.MoveTo, flashVector);
+                }
+                else
+                {
+                    spellR.CastOnUnit(rTarget);
+                }
+            }
+        }
+
+        private static void WardJumpTo(Vector3 pos)
+        {
+            var myWard = Items.GetWardSlot();
+
+            if (Environment.TickCount > lastWjTick + 700)
+            {
+                lastWjTick = Environment.TickCount;
+
+                Items.UseItem((int)myWard.Id, pos);
+            }
+
+            var theWard =
+                ObjectManager.Get<Obj_AI_Minion>()
+                    .Where(x => x.Name.ToLower().Contains("ward") && pos.Distance(x.ServerPosition) < 700)
+                    .OrderBy(x => x.Distance(pos))
+                    .FirstOrDefault();
+
+            if (theWard != null)
+            {
+                spellW.CastOnUnit(theWard);
+            }
+        }
+
+        private static bool CanWardJump()
+        {
+            return spellW.Instance.IsReady() && spellW.Instance.Name.ToLower() == wSpellNames[1].ToLower() && Items.GetWardSlot().IsValidSlot();
+        }
+
+        private static float GetWardjumpTime(Vector3 pos)
+        {
+            var distance = leeHero.Distance(pos);
+            var speed = ChampInfo.W.Speed;
+
+            var time = distance / speed;
+
+            return time;
         }
 
         private static Vector3 GetFlashVector()
@@ -247,7 +305,7 @@ namespace WreckingBall
                 rTargetSecond,
                 GetTimeBetweenTargets() + ChampInfo.R.Delay);
 
-            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(rTargetSecond) + 150);
+            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(rTargetSecond) + 200);
 
             return fVector;
         }
@@ -384,21 +442,17 @@ namespace WreckingBall
                     {
                         Drawing.DrawText(offSetInfo.X, offSetInfo.Y, System.Drawing.Color.AliceBlue, "R is not ready yet");
                     }
-                    else
-                    {
-                        if (!flashSlot.IsReady())
-                        {
-                            Drawing.DrawText(offSetInfo.X, offSetInfo.Y, System.Drawing.Color.AliceBlue, "Flash is not ready yet");
-                        }
-                    }
                 }
             }
 
             if (rTarget != null && rTargetSecond != null)
             {
-                var flashVector = GetFlashVector();
+                if (wbMenu.Item("predVector").GetValue<Circle>().Active)
+                {
+                    var flashVector = GetFlashVector();
 
-                Render.Circle.DrawCircle(flashVector, 50, wbMenu.Item("predVector").GetValue<Circle>().Color);
+                    Render.Circle.DrawCircle(flashVector, 50, wbMenu.Item("predVector").GetValue<Circle>().Color);
+                }
             }
         }
 
@@ -410,9 +464,15 @@ namespace WreckingBall
             mainMenu.AddItem(new MenuItem("bubbaKey", "Bubba Kush Key"))
                 .SetValue(new KeyBind(84, KeyBindType.Toggle, false))
                 .SetTooltip("Toggle mode");
+            mainMenu.AddItem(new MenuItem("useFlash", "Use Flash to get to Kick pos")).SetValue(true);
+            mainMenu.AddItem(new MenuItem("useWardjump", "Use Wardjump to get to Kick pos")).SetValue(true);
+            mainMenu.AddItem(new MenuItem("useQ", "Use Q skill to gapclose to Kick pos"))
+                .SetValue(false)
+                .SetTooltip("Not ready yet!")
+                .FontColor = Color.Red;
             mainMenu.AddItem(new MenuItem("firstTargetRange", "Range to check for most HP enemy"))
                 .SetValue(new Slider(1000, 0, 2000));
-            mainMenu.AddItem(new MenuItem("secondTargetRange", "Range to check for second target")).SetValue(new Slider(1100, 0, 1200));
+            mainMenu.AddItem(new MenuItem("secondTargetRange", "Range to check for second target")).SetValue(new Slider(600, 0, 650));
             wbMenu.AddSubMenu(mainMenu);
 
             var drawingsMenu = new Menu("Draw Settings", "drawing");
