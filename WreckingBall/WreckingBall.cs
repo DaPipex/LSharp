@@ -277,7 +277,7 @@ namespace WreckingBall
                 }
                 else
                 {
-                    if (leeHero.Distance(flashVector) > 125)
+                    if (leeHero.Distance(flashVector) > 50)
                     {
                         if (wbMenu.Item("moveItself").GetValue<bool>())
                         {
