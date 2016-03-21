@@ -87,6 +87,8 @@ namespace WreckingBall
 
             LoadMenu();
 
+            bubbaPriorityMode = (PriorityMode)wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex + 1;
+
             spellQ = new Spell(SpellSlot.Q, ChampInfo.Q.Range);
             spellQ2 = new Spell(SpellSlot.Q, ChampInfo.Q2.Range);
             spellW = new Spell(SpellSlot.W, ChampInfo.W.Range);
@@ -266,9 +268,6 @@ namespace WreckingBall
                 if (leeHero.Distance(flashVector) < 400 && CanWardJump() && doWardjump)
                 {
                     WardJumpTo(flashVector);
-                    Utility.DelayAction.Add((int)(GetWardjumpTime(flashVector) * 1000),
-                        () =>
-                        { spellR.CastOnUnit(rTarget); });
                 }
                 else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash && Environment.TickCount > lastWjTick + 2000)
                 {
@@ -278,7 +277,7 @@ namespace WreckingBall
                 }
                 else
                 {
-                    if (leeHero.Distance(flashVector) > 100)
+                    if (leeHero.Distance(flashVector) > 125)
                     {
                         if (wbMenu.Item("moveItself").GetValue<bool>())
                         {
@@ -310,7 +309,7 @@ namespace WreckingBall
                 }
                 else
                 {
-                    if (leeHero.Distance(flashVector) > 100)
+                    if (leeHero.Distance(flashVector) > 50)
                     {
                         if (wbMenu.Item("moveItself").GetValue<bool>())
                         {
@@ -363,15 +362,17 @@ namespace WreckingBall
             return time;
         }
 
-        private static Vector3 GetFlashVector()
+        private static Vector3 GetFlashVector(bool forDraws = false)
         {
             var secondTargetPredPos = Prediction.GetPrediction(
                 rTargetSecond,
                 GetTimeBetweenTargets() + ChampInfo.R.Delay);
 
-            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(rTargetSecond) + 200);
+            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(secondTargetPredPos.UnitPosition) + 175);
+            
+            var fVectorDraw = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.Position, rTarget.Distance(secondTargetPredPos.UnitPosition) + 175);
 
-            return fVector;
+            return !forDraws ? fVector : fVectorDraw;
         }
 
         private static float GetTimeBetweenTargets()
@@ -514,7 +515,7 @@ namespace WreckingBall
             {
                 if (wbMenu.Item("predVector").GetValue<Circle>().Active)
                 {
-                    var flashVector = GetFlashVector();
+                    var flashVector = GetFlashVector(true);
 
                     Render.Circle.DrawCircle(flashVector, 50, wbMenu.Item("predVector").GetValue<Circle>().Color);
                 }
@@ -534,9 +535,7 @@ namespace WreckingBall
             mainMenu.AddItem(new MenuItem("modePrio", "Kick pos method priority:"))
                 .SetValue(new StringList(new[] { "Wardjump", "Flash" }));
             mainMenu.AddItem(new MenuItem("useQ", "Use Q skill to gapclose to Kick pos"))
-                .SetValue(false)
-                .SetTooltip("Not ready yet!")
-                .FontColor = Color.Red;
+                .SetValue(false);
             mainMenu.AddItem(new MenuItem("moveItself", "Move to Kick pos automatically")).SetValue(true);
             mainMenu.AddItem(new MenuItem("firstTargetRange", "Range to check for most HP enemy"))
                 .SetValue(new Slider(1000, 0, 2000));
