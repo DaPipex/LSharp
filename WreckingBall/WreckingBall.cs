@@ -8,6 +8,8 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using LeagueSharp.Common.Data;
 
+using CommonCollision = LeagueSharp.Common.Collision;
+
 using SharpDX;
 
 namespace WreckingBall
@@ -17,9 +19,8 @@ namespace WreckingBall
 
         private enum PriorityMode
         {
-            Unknown = 0,
-            Wardjump = 1,
-            Flash = 2,
+            Wardjump = 0,
+            Flash = 1,
         }
 
         private const string ChampName = "LeeSin";
@@ -47,6 +48,12 @@ namespace WreckingBall
         private static int lastWjTick;
 
         private static int lastFlashTick;
+
+        private static int distTargetKickPos;
+
+        private static int distLeeKickPos;
+
+        private static int distLeeToWardjump;
 
         private static bool bubbaKushing;
 
@@ -87,7 +94,7 @@ namespace WreckingBall
 
             LoadMenu();
 
-            bubbaPriorityMode = (PriorityMode)wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex + 1;
+            bubbaPriorityMode = (PriorityMode)wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex;
 
             spellQ = new Spell(SpellSlot.Q, ChampInfo.Q.Range);
             spellQ2 = new Spell(SpellSlot.Q, ChampInfo.Q2.Range);
@@ -209,6 +216,23 @@ namespace WreckingBall
                     bubbaPriorityMode = PriorityMode.Flash;
                 }
             }
+
+            //Get some menu values if they change
+            if (distTargetKickPos != wbMenu.Item("distanceToKick").GetValue<Slider>().Value)
+            {
+                distTargetKickPos = wbMenu.Item("distanceToKick").GetValue<Slider>().Value;
+            }
+
+            if (distLeeKickPos != wbMenu.Item("distanceLeeKick").GetValue<Slider>().Value)
+            {
+                distLeeKickPos = wbMenu.Item("distanceLeeKick").GetValue<Slider>().Value;
+            }
+
+            if (distLeeToWardjump != wbMenu.Item("distanceToWardjump").GetValue<Slider>().Value)
+            {
+                distLeeToWardjump = wbMenu.Item("distanceToWardjump").GetValue<Slider>().Value;
+            }
+
         }
 
         private static Obj_AI_Hero ReturnMostHp(List<Obj_AI_Hero> heroList)
@@ -259,15 +283,35 @@ namespace WreckingBall
             }
 
             var flashVector = GetFlashVector();
+            var gpUnit = GetClosestDirectEnemyUnitToPos(flashVector);
 
             var doFlash = wbMenu.Item("useFlash").GetValue<bool>();
             var doWardjump = wbMenu.Item("useWardjump").GetValue<bool>();
+            var doQ = wbMenu.Item("useQ").GetValue<bool>();
+
+            if (doQ)
+            {
+                if (leeHero.Distance(flashVector) > 425 && leeHero.Distance(flashVector) < ChampInfo.Q.Range + distLeeToWardjump
+                    && CanQ1())
+                {
+                    if (gpUnit != null)
+                    {
+                        spellQ.CastOnUnit(gpUnit);
+                    }
+                }
+
+                if (spellQ2.Instance.IsReady() && spellQ2.Instance.Name.ToLower() == qSpellNames[2].ToLower())
+                {
+                    spellQ2.Cast();
+                }
+            }
 
             if (bubbaPriorityMode == PriorityMode.Wardjump)
             {
-                if (leeHero.Distance(flashVector) < 400 && CanWardJump() && doWardjump)
+                if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump)
                 {
                     WardJumpTo(flashVector);
+                    lastWjTick = Environment.TickCount;
                 }
                 else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash && Environment.TickCount > lastWjTick + 2000)
                 {
@@ -277,11 +321,15 @@ namespace WreckingBall
                 }
                 else
                 {
-                    if (leeHero.Distance(flashVector) > 50)
+                    if (leeHero.Distance(flashVector) > distLeeKickPos)
                     {
                         if (wbMenu.Item("moveItself").GetValue<bool>())
                         {
-                            leeHero.IssueOrder(GameObjectOrder.MoveTo, flashVector);
+                            leeHero.IssueOrder(
+                                GameObjectOrder.MoveTo,
+                                wbMenu.Item("moveItselfMode").GetValue<StringList>().SelectedIndex == 0
+                                    ? flashVector
+                                    : Game.CursorPos);
                         }
                     }
                     else
@@ -294,26 +342,28 @@ namespace WreckingBall
             {
                 if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash)
                 {
+                    lastFlashTick = Environment.TickCount;
+
                     spellR.CastOnUnit(rTarget);
 
                     leeHero.Spellbook.CastSpell(flashSlot, flashVector);
-
-                    lastFlashTick = Environment.TickCount;
                 }
-                else if (leeHero.Distance(flashVector) < 400 && CanWardJump() && doWardjump && Environment.TickCount > lastFlashTick + 2000)
+                else if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump && Environment.TickCount > lastFlashTick + 2000)
                 {
                     WardJumpTo(flashVector);
-                    Utility.DelayAction.Add((int)(GetWardjumpTime(flashVector) * 1000),
-                        () =>
-                        { spellR.CastOnUnit(rTarget); });
+                    lastWjTick = Environment.TickCount;
                 }
                 else
                 {
-                    if (leeHero.Distance(flashVector) > 50)
+                    if (leeHero.Distance(flashVector) > distLeeKickPos)
                     {
                         if (wbMenu.Item("moveItself").GetValue<bool>())
                         {
-                            leeHero.IssueOrder(GameObjectOrder.MoveTo, flashVector);
+                            leeHero.IssueOrder(
+                                GameObjectOrder.MoveTo,
+                                wbMenu.Item("moveItselfMode").GetValue<StringList>().SelectedIndex == 0
+                                    ? flashVector
+                                    : Game.CursorPos);
                         }
                     }
                     else
@@ -322,6 +372,58 @@ namespace WreckingBall
                     }
                 }
             }
+        }
+
+        private static Obj_AI_Base GetClosestDirectEnemyUnitToPos(Vector3 pos)
+        {
+            List<Obj_AI_Base> possibleHeroes =
+                HeroManager.Enemies.Where(x => x.IsValidTarget() && pos.Distance(x.ServerPosition) < distLeeToWardjump).ToList().ConvertAll(x => (Obj_AI_Base)x);
+
+            List<Obj_AI_Base> possibleMinions =
+                MinionManager.GetMinions(pos, distLeeToWardjump, MinionTypes.All, MinionTeam.Enemy).ToList();
+
+            List<Obj_AI_Base> allPossible = possibleHeroes.Concat(possibleMinions).ToList();
+
+            allPossible = allPossible.OrderBy(unit => unit.Distance(pos)).ToList();
+
+            Obj_AI_Base bestUnit = null;
+
+            foreach (var candidate in allPossible)
+            {
+                var collisionList = new List<Vector3> { leeHero.ServerPosition, candidate.ServerPosition };
+
+                var predInput = new PredictionInput();
+                predInput.Speed = ChampInfo.Q.Speed;
+                predInput.Range = ChampInfo.Q.Range;
+                predInput.Delay = ChampInfo.Q.Delay;
+                predInput.Radius = ChampInfo.Q.Width;
+                predInput.Collision = true;
+                predInput.Type = SkillshotType.SkillshotLine;
+                predInput.CollisionObjects = new[]
+                                                 {
+                                                     CollisionableObjects.Heroes, CollisionableObjects.Minions,
+                                                     CollisionableObjects.YasuoWall
+                                                 };
+
+                var collInput = CommonCollision.GetCollision(collisionList, predInput);
+
+                var realCollList = new List<Obj_AI_Base>();
+
+                if (collInput.Any())
+                {
+                    realCollList.AddRange(collInput.Where(unit => unit.NetworkId != leeHero.NetworkId && unit.NetworkId != candidate.NetworkId));
+                }
+
+                if (realCollList.Any())
+                {
+                    continue;
+                }
+
+                bestUnit = candidate;
+                break;
+            }
+
+            return bestUnit;
         }
 
         private static void WardJumpTo(Vector3 pos)
@@ -352,7 +454,12 @@ namespace WreckingBall
             return spellW.Instance.IsReady() && spellW.Instance.Name.ToLower() == wSpellNames[1].ToLower() && Items.GetWardSlot().IsValidSlot();
         }
 
-        private static float GetWardjumpTime(Vector3 pos)
+        private static bool CanQ1()
+        {
+            return spellQ.Instance.IsReady() && spellQ.Instance.Name.ToLower() == qSpellNames[1].ToLower();
+        }
+
+        /*private static float GetWardjumpTime(Vector3 pos)
         {
             var distance = leeHero.Distance(pos);
             var speed = ChampInfo.W.Speed;
@@ -360,7 +467,7 @@ namespace WreckingBall
             var time = distance / speed;
 
             return time;
-        }
+        }*/
 
         private static Vector3 GetFlashVector(bool forDraws = false)
         {
@@ -368,9 +475,9 @@ namespace WreckingBall
                 rTargetSecond,
                 GetTimeBetweenTargets() + ChampInfo.R.Delay);
 
-            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(secondTargetPredPos.UnitPosition) + 175);
+            var fVector = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.ServerPosition, rTarget.Distance(secondTargetPredPos.UnitPosition) + distTargetKickPos);
             
-            var fVectorDraw = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.Position, rTarget.Distance(secondTargetPredPos.UnitPosition) + 175);
+            var fVectorDraw = new Vector3(secondTargetPredPos.UnitPosition.ToArray()).Extend(rTarget.Position, rTarget.Distance(secondTargetPredPos.UnitPosition) + distTargetKickPos);
 
             return !forDraws ? fVector : fVectorDraw;
         }
@@ -537,9 +644,22 @@ namespace WreckingBall
             mainMenu.AddItem(new MenuItem("useQ", "Use Q skill to gapclose to Kick pos"))
                 .SetValue(false);
             mainMenu.AddItem(new MenuItem("moveItself", "Move to Kick pos automatically")).SetValue(true);
+            mainMenu.AddItem(new MenuItem("moveItselfMode", "If ^ true then move:"))
+                .SetValue(new StringList(new[] { "Automatically", "Manually" }, 1));
             mainMenu.AddItem(new MenuItem("firstTargetRange", "Range to check for most HP enemy"))
                 .SetValue(new Slider(1000, 0, 2000));
             mainMenu.AddItem(new MenuItem("secondTargetRange", "Range to check for second target")).SetValue(new Slider(600, 0, 650));
+
+            var extraMenu = new Menu("Extra Settings", "extrasettings");
+            extraMenu.AddItem(new MenuItem("info3", "Adjust if needed"));
+            extraMenu.AddItem(new MenuItem("distanceToKick", "Distance from first target to Kick Pos"))
+                .SetValue(new Slider(150, 100, 200));
+            extraMenu.AddItem(new MenuItem("distanceLeeKick", "Min distance from Lee to Kick Pos"))
+                .SetValue(new Slider(75, 10, 150));
+            extraMenu.AddItem(new MenuItem("distanceToWardjump", "Min distance to Kick Pos for Wardjump"))
+                .SetValue(new Slider(400, 300, 650));
+
+            mainMenu.AddSubMenu(extraMenu);
             wbMenu.AddSubMenu(mainMenu);
 
             var drawingsMenu = new Menu("Draw Settings", "drawing");
