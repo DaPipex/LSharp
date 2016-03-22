@@ -246,7 +246,7 @@ namespace WreckingBall
                     mostHp = hero;
                 }
 
-                if (mostHp.BonusHealth < hero.BonusHealth)
+                if (mostHp.MaxHealth < hero.MaxHealth)
                 {
                     mostHp = hero;
                 }
