@@ -37,13 +37,13 @@ namespace WreckingBall
 
         private static Menu wbMenu;
 
-        private static readonly string[] qSpellNames = { string.Empty, "BlindMonkQOne", "BlindMonkQTwo" };
+        private static readonly string[] QSpellNames = { string.Empty, "BlindMonkQOne", "BlindMonkQTwo" };
 
-        private static readonly string[] wSpellNames = { string.Empty, "BlindMonkWOne", "BlindMonkWTwo" };
+        private static readonly string[] WSpellNames = { string.Empty, "BlindMonkWOne", "BlindMonkWTwo" };
 
-        private static readonly string[] eSpellNames = { string.Empty, "BlindMonkEOne", "BlindMonkETwo" };
+        private static readonly string[] ESpellNames = { string.Empty, "BlindMonkEOne", "BlindMonkETwo" };
 
-        private static readonly string rSpellName = "BlindMonkRKick";
+        private static readonly string RSpellName = "BlindMonkRKick";
 
         private static int lastWjTick;
 
@@ -60,7 +60,7 @@ namespace WreckingBall
         private static PriorityMode bubbaPriorityMode;
 
 
-        private static Items.Item[] wjItems =
+        private static readonly Items.Item[] WjItems =
             {
                 new Items.Item(1408, 600), //Enchanted - Warrior
                 new Items.Item(1409, 600), //Enchanted - Cinderhulk 
@@ -141,7 +141,7 @@ namespace WreckingBall
             {
                 var foundAny = false;
 
-                foreach (Items.Item item in wjItems)
+                foreach (Items.Item item in WjItems)
                 {
                     if (Items.HasItem(item.Id))
                     {
@@ -296,11 +296,16 @@ namespace WreckingBall
                 {
                     if (gpUnit != null)
                     {
-                        spellQ.CastOnUnit(gpUnit);
+                        var pred = spellQ.GetPrediction(gpUnit);
+
+                        if (pred.Hitchance >= HitChance.Medium)
+                        {
+                            spellQ.Cast(pred.CastPosition);
+                        }
                     }
                 }
 
-                if (spellQ2.Instance.IsReady() && spellQ2.Instance.Name.ToLower() == qSpellNames[2].ToLower())
+                if (spellQ2.Instance.IsReady() && spellQ2.Instance.Name.ToLower() == QSpellNames[2].ToLower())
                 {
                     spellQ2.Cast();
                 }
@@ -377,10 +382,10 @@ namespace WreckingBall
         private static Obj_AI_Base GetClosestDirectEnemyUnitToPos(Vector3 pos)
         {
             List<Obj_AI_Base> possibleHeroes =
-                HeroManager.Enemies.Where(x => x.IsValidTarget() && pos.Distance(x.ServerPosition) < distLeeToWardjump).ToList().ConvertAll(x => (Obj_AI_Base)x);
+                HeroManager.Enemies.Where(x => x.IsValidTarget() && pos.Distance(x.ServerPosition) < distLeeToWardjump && x.Health > spellQ.GetDamage(x)).ToList().ConvertAll(x => (Obj_AI_Base)x);
 
             List<Obj_AI_Base> possibleMinions =
-                MinionManager.GetMinions(pos, distLeeToWardjump, MinionTypes.All, MinionTeam.Enemy).ToList();
+                MinionManager.GetMinions(pos, distLeeToWardjump).Where(x => x.Health > spellQ.GetDamage(x)).ToList();
 
             List<Obj_AI_Base> allPossible = possibleHeroes.Concat(possibleMinions).ToList();
 
@@ -451,12 +456,12 @@ namespace WreckingBall
 
         private static bool CanWardJump()
         {
-            return spellW.Instance.IsReady() && spellW.Instance.Name.ToLower() == wSpellNames[1].ToLower() && Items.GetWardSlot().IsValidSlot();
+            return spellW.Instance.IsReady() && spellW.Instance.Name.ToLower() == WSpellNames[1].ToLower() && Items.GetWardSlot().IsValidSlot();
         }
 
         private static bool CanQ1()
         {
-            return spellQ.Instance.IsReady() && spellQ.Instance.Name.ToLower() == qSpellNames[1].ToLower();
+            return spellQ.Instance.IsReady() && spellQ.Instance.Name.ToLower() == QSpellNames[1].ToLower();
         }
 
         /*private static float GetWardjumpTime(Vector3 pos)
