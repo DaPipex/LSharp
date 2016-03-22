@@ -246,7 +246,7 @@ namespace WreckingBall
                     mostHp = hero;
                 }
 
-                if (mostHp.Health < hero.Health)
+                if (mostHp.BonusHealth < hero.BonusHealth)
                 {
                     mostHp = hero;
                 }
@@ -298,7 +298,7 @@ namespace WreckingBall
                     {
                         var pred = spellQ.GetPrediction(gpUnit);
 
-                        if (pred.Hitchance >= HitChance.Medium)
+                        if (pred.Hitchance >= HitChance.High)
                         {
                             spellQ.Cast(pred.CastPosition);
                         }
