@@ -49,6 +49,8 @@ namespace WreckingBall
 
         private static int lastFlashTick;
 
+        private static int lastSwitchT;
+
         private static int distTargetKickPos;
 
         private static int distLeeKickPos;
@@ -56,6 +58,8 @@ namespace WreckingBall
         private static int distLeeToWardjump;
 
         private static bool bubbaKushing;
+
+        private static int mainMode;
 
         private static PriorityMode bubbaPriorityMode;
 
@@ -127,37 +131,6 @@ namespace WreckingBall
 
         private static void WreckingBallOnUpdate(EventArgs args)
         {
-            if (wbMenu.Item("debug1").GetValue<bool>())
-            {
-                for (int i = 0; leeHero.InventoryItems.Length > i; i++)
-                {
-                    Game.PrintChat("Item " + i + ": " + leeHero.InventoryItems[i].IData.Id);
-                }
-
-                wbMenu.Item("debug1").SetValue(false);
-            }
-
-            if (wbMenu.Item("debug2").GetValue<bool>())
-            {
-                var foundAny = false;
-
-                foreach (Items.Item item in WjItems)
-                {
-                    if (Items.HasItem(item.Id))
-                    {
-                        Game.PrintChat("I have a wardjump item: " + item.Id);
-                        foundAny = true;
-                    }
-                }
-
-                if (!foundAny)
-                {
-                    Game.PrintChat("No wardjump item found :(");
-                }
-
-                wbMenu.Item("debug2").SetValue(false);
-            }
-
             //Select most HP target
 
             List<Obj_AI_Hero> inRangeHeroes =
@@ -166,7 +139,7 @@ namespace WreckingBall
                     x.IsValid && !x.IsDead && x.IsVisible
                     && x.Distance(leeHero.ServerPosition) < wbMenu.Item("firstTargetRange").GetValue<Slider>().Value).ToList();
 
-            rTarget = inRangeHeroes.Any() ? ReturnMostHp(inRangeHeroes) : null;
+            rTarget = inRangeHeroes.Any() ? (mainMode == 0 ? ReturnMostHp(inRangeHeroes) : ReturnClosest(inRangeHeroes)) : null;
 
             //Select less HP target
             if (rTarget != null)
@@ -202,19 +175,20 @@ namespace WreckingBall
                 }
             }
 
-            if (wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex == 0)
+            switch (wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex)
             {
-                if (bubbaPriorityMode == PriorityMode.Flash)
-                {
-                    bubbaPriorityMode = PriorityMode.Wardjump;
-                }
-            }
-            else if (wbMenu.Item("modePrio").GetValue<StringList>().SelectedIndex == 1)
-            {
-                if (bubbaPriorityMode == PriorityMode.Wardjump)
-                {
-                    bubbaPriorityMode = PriorityMode.Flash;
-                }
+                case 0:
+                    if (bubbaPriorityMode == PriorityMode.Flash)
+                    {
+                        bubbaPriorityMode = PriorityMode.Wardjump;
+                    }
+                    break;
+                case 1:
+                    if (bubbaPriorityMode == PriorityMode.Wardjump)
+                    {
+                        bubbaPriorityMode = PriorityMode.Flash;
+                    }
+                    break;
             }
 
             //Get some menu values if they change
@@ -233,6 +207,27 @@ namespace WreckingBall
                 distLeeToWardjump = wbMenu.Item("distanceToWardjump").GetValue<Slider>().Value;
             }
 
+            if (mainMode != wbMenu.Item("mainMode").GetValue<StringList>().SelectedIndex)
+            {
+                mainMode = wbMenu.Item("mainMode").GetValue<StringList>().SelectedIndex;
+            }
+
+            if (wbMenu.Item("switchKey").GetValue<KeyBind>().Active && Environment.TickCount > lastSwitchT + 450)
+            {
+                switch (wbMenu.Item("mainMode").GetValue<StringList>().SelectedIndex)
+                {
+                    case 0:
+                        wbMenu.Item("mainMode")
+                            .SetValue(new StringList(new[] { "Most MaxHP >> Less HP", "Closest >> Less HP" }, 1));
+                        lastSwitchT = Environment.TickCount;
+                        break;
+                    case 1:
+                        wbMenu.Item("mainMode")
+                            .SetValue(new StringList(new[] { "Most MaxHP >> Less HP", "Closest >> Less HP" }, 0));
+                        lastSwitchT = Environment.TickCount;
+                        break;
+                }
+            }
         }
 
         private static Obj_AI_Hero ReturnMostHp(List<Obj_AI_Hero> heroList)
@@ -253,6 +248,26 @@ namespace WreckingBall
             }
 
             return mostHp;
+        }
+
+        private static Obj_AI_Hero ReturnClosest(List<Obj_AI_Hero> herolist)
+        {
+            Obj_AI_Hero closest = null;
+
+            foreach (var hero in herolist)
+            {
+                if (closest == null)
+                {
+                    closest = hero;
+                }
+
+                if (closest.Distance(leeHero) > hero.Distance(leeHero))
+                {
+                    closest = hero;
+                }
+            }
+
+            return closest;
         }
 
         private static Obj_AI_Hero ReturnLessHp(List<Obj_AI_Hero> heroList)
@@ -289,6 +304,8 @@ namespace WreckingBall
             var doWardjump = wbMenu.Item("useWardjump").GetValue<bool>();
             var doQ = wbMenu.Item("useQ").GetValue<bool>();
 
+            var qPredHc = wbMenu.Item("useQpred").GetValue<StringList>().SelectedIndex + 4;
+
             if (doQ)
             {
                 if (leeHero.Distance(flashVector) > 425 && leeHero.Distance(flashVector) < ChampInfo.Q.Range + distLeeToWardjump
@@ -298,7 +315,7 @@ namespace WreckingBall
                     {
                         var pred = spellQ.GetPrediction(gpUnit);
 
-                        if (pred.Hitchance >= HitChance.High)
+                        if (pred.Hitchance >= (HitChance)qPredHc)
                         {
                             spellQ.Cast(pred.CastPosition);
                         }
@@ -506,20 +523,20 @@ namespace WreckingBall
 
             var heroPos = Drawing.WorldToScreen(leeHero.Position);
             var textDimension = Drawing.GetTextExtent("Bubba Kush Active!");
-            var offsetValue = -30;
-            var offsetValueInfo = -50;
-            var offSet = new Vector2(heroPos.X, heroPos.Y - offsetValue);
-            var offSetInfo = new Vector2(heroPos.X, heroPos.Y - offsetValueInfo);
+            const int OffsetValue = -30;
+            const int OffsetValueInfo = -50;
+            var offSet = new Vector2(heroPos.X, heroPos.Y - OffsetValue);
+            var offSetInfo = new Vector2(heroPos.X, heroPos.Y - OffsetValueInfo);
 
             var simpleCircles = wbMenu.Item("simpleCircles").GetValue<bool>();
 
             if (wbMenu.Item("bubbaKey").GetValue<KeyBind>().Active)
             {
-                Drawing.DrawText(offSet.X - textDimension.Width / 2, offSet.Y, wbMenu.Item("textcolor").GetValue<Circle>().Color, "Bubba Kush Active!");
+                Drawing.DrawText(offSet.X - textDimension.Width / 2f, offSet.Y, wbMenu.Item("textcolor").GetValue<Circle>().Color, "Bubba Kush Active!");
             }
             else
             {
-                Drawing.DrawText(offSet.X - textDimension.Width / 2, offSet.Y, System.Drawing.Color.Red, "Bubba Kush Inactive!");
+                Drawing.DrawText(offSet.X - textDimension.Width / 2f, offSet.Y, System.Drawing.Color.Red, "Bubba Kush Inactive!");
             }
 
             if (wbMenu.Item("bestTarget").GetValue<Circle>().Active)
@@ -642,13 +659,18 @@ namespace WreckingBall
             mainMenu.AddItem(new MenuItem("bubbaKey", "Bubba Kush Key"))
                 .SetValue(new KeyBind(84, KeyBindType.Toggle, false))
                 .SetTooltip("Toggle mode");
+            mainMenu.AddItem(new MenuItem("mainMode", "Bubba Kush Mode"))
+                .SetValue(new StringList(new[] { "Most MaxHP >> Less HP", "Closest >> Less HP" }));
+            mainMenu.AddItem(new MenuItem("switchKey", "Switch mode Key")).SetValue(new KeyBind(90, KeyBindType.Press));
             mainMenu.AddItem(new MenuItem("useFlash", "Use Flash to get to Kick pos")).SetValue(true);
             mainMenu.AddItem(new MenuItem("useWardjump", "Use Wardjump to get to Kick pos")).SetValue(true);
             mainMenu.AddItem(new MenuItem("modePrio", "Kick pos method priority:"))
                 .SetValue(new StringList(new[] { "Wardjump", "Flash" }));
             mainMenu.AddItem(new MenuItem("useQ", "Use Q skill to gapclose to Kick pos"))
                 .SetValue(false);
-            mainMenu.AddItem(new MenuItem("moveItself", "Move to Kick pos automatically")).SetValue(true);
+            mainMenu.AddItem(new MenuItem("useQpred", "Q Min Prediction"))
+                .SetValue(new StringList(new[] { "Medium", "High", "Very High" }));
+            mainMenu.AddItem(new MenuItem("moveItself", "Move to Kick pos...")).SetValue(true);
             mainMenu.AddItem(new MenuItem("moveItselfMode", "If ^ true then move:"))
                 .SetValue(new StringList(new[] { "Automatically", "Manually" }, 1));
             mainMenu.AddItem(new MenuItem("firstTargetRange", "Range to check for most HP enemy"))

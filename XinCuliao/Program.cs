@@ -27,7 +27,7 @@ namespace XinCuliao
                 "MIJITO VENGA A CHUPARME EL PICO MEJOR AJKASKJDASJKAJKASDJKJKASDJK",
                 "SI SUPIERAS LINCE COMO LE TIRO LOS CORTES A TU MAMA POR DEBAJO DE LA MESA ASJJASJAS",
                 "TE PILLO TE CULEO QUE BUEN MOMO",
-                "ASJDASJJ TE GUSTA POR EL CHICO MARICON ZAMUDIO TE AGARRO A BATAZOS EQURISDAUUXD"
+                "A RAJAR COMPA DIJO TU MAMA CUANDO LE VIO EL PICO AL PANTHEON XDDDDDDDD"
             };
 
         static void Main(string[] args)
@@ -40,6 +40,7 @@ namespace XinCuliao
             semenMenu = new Menu("Chupa el pico", "pene", true);
             semenMenu.AddItem(new MenuItem("sexo", "Chupa el sexo")).SetValue(new KeyBind("p".ToCharArray()[0], KeyBindType.Press));
             semenMenu.AddItem(new MenuItem("sexoanal", "PICO")).SetValue(false);
+            semenMenu.AddItem(new MenuItem("sexooral", "FOXER")).SetValue(false);
             semenMenu.AddItem(new MenuItem("patodos", "Decirlo pa todos los culiaos?")).SetValue(true);
             semenMenu.AddToMainMenu();
 
@@ -74,6 +75,15 @@ namespace XinCuliao
                 if (Environment.TickCount > lastT + 1000)
                 {
                     Game.Say("/all PICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICOPICO");
+                    lastT = Environment.TickCount;
+                }
+            }
+
+            if (semenMenu.Item("sexooral").GetValue<bool>())
+            {
+                if (Environment.TickCount > lastT + 1000)
+                {
+                    Game.Say("/all Foxer saludame en youtube mijito rico asjkasjdas :x te loveo");
                     lastT = Environment.TickCount;
                 }
             }
