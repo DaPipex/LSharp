@@ -25,11 +25,15 @@ namespace WreckingBall
 
         private const string ChampName = "LeeSin";
 
+        private const string Version = "1.7";
+
         private static Obj_AI_Hero leeHero;
 
         private static Obj_AI_Hero rTarget;
 
         private static Obj_AI_Hero rTargetSecond;
+
+        private static Obj_AI_Minion mostRecentWard;
 
         private static Spell spellQ, spellQ2, spellW, spellW2, spellE, spellE2, spellR;
 
@@ -47,7 +51,11 @@ namespace WreckingBall
 
         private static int lastWjTick;
 
+        private static int lastWjTickMenu;
+
         private static int lastFlashTick;
+
+        private static int lastFlashTickMenu;
 
         private static int lastSwitchT;
 
@@ -56,6 +64,8 @@ namespace WreckingBall
         private static int distLeeKickPos;
 
         private static int distLeeToWardjump;
+
+        private static int finishWardJumpTimes = 0;
 
         private static bool bubbaKushing;
 
@@ -127,6 +137,7 @@ namespace WreckingBall
 
             Game.OnUpdate += WreckingBallOnUpdate;
             Drawing.OnDraw += WreckingBallOnDraw;
+            GameObject.OnCreate += WreckingBallOnCreate;
         }
 
         private static void WreckingBallOnUpdate(EventArgs args)
@@ -228,6 +239,11 @@ namespace WreckingBall
                         break;
                 }
             }
+
+            /*if (wbMenu.Item("debug3").GetValue<KeyBind>().Active)
+            {
+                WardJumpTo(Game.CursorPos);
+            }*/
         }
 
         private static Obj_AI_Hero ReturnMostHp(List<Obj_AI_Hero> heroList)
@@ -333,13 +349,16 @@ namespace WreckingBall
                 if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump)
                 {
                     WardJumpTo(flashVector);
-                    lastWjTick = Environment.TickCount;
                 }
-                else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash && Environment.TickCount > lastWjTick + 2000)
+                else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range
+                         && flashSlot.IsReady() && doFlash && Environment.TickCount > lastWjTickMenu + 2000)
                 {
-                    spellR.CastOnUnit(rTarget);
+                    var castedR = spellR.CastOnUnit(rTarget);
 
-                    leeHero.Spellbook.CastSpell(flashSlot, flashVector);
+                    if (castedR)
+                    {
+                        leeHero.Spellbook.CastSpell(flashSlot, flashVector);
+                    }
                 }
                 else
                 {
@@ -362,18 +381,21 @@ namespace WreckingBall
             }
             else if (bubbaPriorityMode == PriorityMode.Flash)
             {
-                if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range && flashSlot.IsReady() && doFlash)
+                if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range
+                    && flashSlot.IsReady() && doFlash)
                 {
-                    lastFlashTick = Environment.TickCount;
+                    var castedR = spellR.CastOnUnit(rTarget);
 
-                    spellR.CastOnUnit(rTarget);
-
-                    leeHero.Spellbook.CastSpell(flashSlot, flashVector);
+                    if (castedR)
+                    {
+                        leeHero.Spellbook.CastSpell(flashSlot, flashVector);
+                        lastFlashTick = Environment.TickCount;
+                    }
                 }
-                else if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump && Environment.TickCount > lastFlashTick + 2000)
+                else if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump
+                         && Environment.TickCount > lastFlashTickMenu + 2000)
                 {
                     WardJumpTo(flashVector);
-                    lastWjTick = Environment.TickCount;
                 }
                 else
                 {
@@ -452,22 +474,39 @@ namespace WreckingBall
         {
             var myWard = Items.GetWardSlot();
 
-            if (Environment.TickCount > lastWjTick + 700)
+            if (Environment.TickCount > lastWjTick + 200)
             {
-                lastWjTick = Environment.TickCount;
+                if (Items.UseItem((int)myWard.Id, pos))
+                {
+                    lastWjTick = Environment.TickCount;
 
-                Items.UseItem((int)myWard.Id, pos);
+                    Utility.DelayAction.Add(
+                        80,
+                        () =>
+                            {
+                                spellW.CastOnUnit(mostRecentWard);
+                            });
+                }
             }
+        }
 
-            var theWard =
-                ObjectManager.Get<Obj_AI_Minion>()
-                    .Where(x => x.Name.ToLower().Contains("ward") && pos.Distance(x.ServerPosition) < 700)
-                    .OrderBy(x => x.Distance(pos))
-                    .FirstOrDefault();
-
-            if (theWard != null)
+        private static void WreckingBallOnCreate(GameObject sender, EventArgs args)
+        {
+            if (sender.Name.ToLower().Contains("ward") && !(sender is Obj_GeneralParticleEmitter))
             {
-                spellW.CastOnUnit(theWard);
+                var ward = (Obj_AI_Base)sender;
+
+                //Game.PrintChat(ward.Buffs[0].SourceName);
+
+                Utility.DelayAction.Add(
+                    5,
+                    () =>
+                        {
+                            if (ward.Buffs.Any(x => x.SourceName == "Lee Sin"))
+                            {
+                                mostRecentWard = (Obj_AI_Minion)ward;
+                            }
+                        });
             }
         }
 
@@ -654,6 +693,7 @@ namespace WreckingBall
         private static void LoadMenu()
         {
             wbMenu = new Menu("Wrecking Ball (Bubba Kush)", "wreckingball", true);
+            wbMenu.AddItem(new MenuItem("info4", "Version: " + Version));
 
             var mainMenu = new Menu("Main Settings", "mainsettings");
             mainMenu.AddItem(new MenuItem("bubbaKey", "Bubba Kush Key"))
@@ -714,6 +754,8 @@ namespace WreckingBall
             var debugMenu = new Menu("Debug", "debugmenu");
             debugMenu.AddItem(new MenuItem("debug1", "Show info 1")).SetValue(false);
             debugMenu.AddItem(new MenuItem("debug2", "Has wardjump item?")).SetValue(false);
+            /*debugMenu.AddItem(new MenuItem("debug3", "Wardjump to mouse test"))
+                .SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press));*/
             wbMenu.AddSubMenu(debugMenu);
 
             wbMenu.AddToMainMenu();
