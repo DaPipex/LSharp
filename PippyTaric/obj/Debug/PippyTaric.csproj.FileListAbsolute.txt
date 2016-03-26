@@ -1,2 +1,0 @@
-C:\Users\Pipexlul\documents\visual studio 2013\Projects\PipexAssemblies\PippyTaric\bin\Release\PippyTaric.exe.config
-C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PippyTaric\bin\Release\PippyTaric.exe.config

@@ -18,9 +18,9 @@ namespace PippyTaric
         public static bool DebugMode = false;
 
         private const string champName = "Taric";
-        private readonly static Color pippyTaricColor = Color.FromArgb(60, 222, 203);
-        private readonly static string[] qStringList = { "Don't use", "Only on me", "Only on ally" };
-        private readonly static string buffName = "taricgemcraftbuff";
+        private static readonly Color pippyTaricColor = Color.FromArgb(60, 222, 203);
+        private static readonly string[] qStringList = { "Don't use", "Only on me", "Only on ally" };
+        private static readonly string buffName = "taricgemcraftbuff";
 
         private static Spell theQ, theW, theE, theR;
         private static Items.Item tiamat_item, hydra_item, youmuu_item, bc_item, ruined_item;
@@ -556,6 +556,7 @@ namespace PippyTaric
             {
                 spellDamage += totalBasic;
             }
+            return 0;
         }
     }
 }
