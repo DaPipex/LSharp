@@ -25,7 +25,7 @@ namespace WreckingBall
 
         private const string ChampName = "LeeSin";
 
-        private const string Version = "1.7";
+        private const string Version = "1.7.5";
 
         private static Obj_AI_Hero leeHero;
 
@@ -751,12 +751,12 @@ namespace WreckingBall
             drawingsMenu.AddItem(new MenuItem("disableAllDraw", "Disable all drawings")).SetValue(false);
             wbMenu.AddSubMenu(drawingsMenu);
 
-            var debugMenu = new Menu("Debug", "debugmenu");
+            /*var debugMenu = new Menu("Debug", "debugmenu");
             debugMenu.AddItem(new MenuItem("debug1", "Show info 1")).SetValue(false);
             debugMenu.AddItem(new MenuItem("debug2", "Has wardjump item?")).SetValue(false);
-            /*debugMenu.AddItem(new MenuItem("debug3", "Wardjump to mouse test"))
-                .SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press));*/
-            wbMenu.AddSubMenu(debugMenu);
+            debugMenu.AddItem(new MenuItem("debug3", "Wardjump to mouse test"))
+                .SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press));
+            wbMenu.AddSubMenu(debugMenu);*/
 
             wbMenu.AddToMainMenu();
         }
