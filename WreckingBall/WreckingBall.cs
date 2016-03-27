@@ -25,7 +25,7 @@ namespace WreckingBall
 
         private const string ChampName = "LeeSin";
 
-        private const string Version = "1.8.1";
+        private const string Version = "1.8.2";
 
         private static Obj_AI_Hero leeHero;
 
@@ -490,7 +490,7 @@ namespace WreckingBall
                     lastWjTick = Environment.TickCount;
 
                     Utility.DelayAction.Add(
-                        80,
+                        100,
                         () =>
                             {
                                 if (spellW.CastOnUnit(mostRecentWard))
