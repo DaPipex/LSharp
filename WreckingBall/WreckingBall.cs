@@ -25,7 +25,7 @@ namespace WreckingBall
 
         private const string ChampName = "LeeSin";
 
-        private const string Version = "1.8";
+        private const string Version = "1.8.1";
 
         private static Obj_AI_Hero leeHero;
 
@@ -238,6 +238,15 @@ namespace WreckingBall
                         lastSwitchT = Environment.TickCount;
                         break;
                 }
+            }
+
+            if (wbMenu.Item("valuesToDefault").GetValue<bool>())
+            {
+                wbMenu.Item("distanceToKick").SetValue(new Slider(150, 100, 200));
+                wbMenu.Item("distanceLeeKick").SetValue(new Slider(75, 10, 150));
+                wbMenu.Item("distanceToWardjump").SetValue(new Slider(400, 300, 650));
+
+                wbMenu.Item("valuesToDefault").SetValue(false);
             }
 
             /*if (wbMenu.Item("debug3").GetValue<KeyBind>().Active && CanWardJump())
@@ -688,7 +697,7 @@ namespace WreckingBall
                 {
                     var flashVector = GetFlashVector(true);
 
-                    Render.Circle.DrawCircle(flashVector, 50, wbMenu.Item("predVector").GetValue<Circle>().Color);
+                    Render.Circle.DrawCircle(flashVector, distLeeKickPos, wbMenu.Item("predVector").GetValue<Circle>().Color);
                 }
             }
         }
@@ -728,6 +737,7 @@ namespace WreckingBall
                 .SetValue(new Slider(75, 10, 150));
             extraMenu.AddItem(new MenuItem("distanceToWardjump", "Min distance to Kick Pos for Wardjump"))
                 .SetValue(new Slider(400, 300, 650));
+            extraMenu.AddItem(new MenuItem("valuesToDefault", "Return values to their default values")).SetValue(false);
 
             mainMenu.AddSubMenu(extraMenu);
             wbMenu.AddSubMenu(mainMenu);
