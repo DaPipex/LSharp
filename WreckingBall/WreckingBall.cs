@@ -25,7 +25,7 @@ namespace WreckingBall
 
         private const string ChampName = "LeeSin";
 
-        private const string Version = "1.7.5";
+        private const string Version = "1.8";
 
         private static Obj_AI_Hero leeHero;
 
@@ -49,13 +49,13 @@ namespace WreckingBall
 
         private static readonly string RSpellName = "BlindMonkRKick";
 
-        private static int lastWjTick;
+        private static int lastWjTick = 0;
 
-        private static int lastWjTickMenu;
+        private static int lastWjTickMenu = 0;
 
-        private static int lastFlashTick;
+        private static int lastFlashTick = 0;
 
-        private static int lastFlashTickMenu;
+        private static int lastFlashTickMenu = 0;
 
         private static int lastSwitchT;
 
@@ -240,7 +240,7 @@ namespace WreckingBall
                 }
             }
 
-            /*if (wbMenu.Item("debug3").GetValue<KeyBind>().Active)
+            /*if (wbMenu.Item("debug3").GetValue<KeyBind>().Active && CanWardJump())
             {
                 WardJumpTo(Game.CursorPos);
             }*/
@@ -351,7 +351,7 @@ namespace WreckingBall
                     WardJumpTo(flashVector);
                 }
                 else if (leeHero.Distance(flashVector) < 425 && leeHero.Distance(rTarget) < ChampInfo.R.Range
-                         && flashSlot.IsReady() && doFlash && Environment.TickCount > lastWjTickMenu + 2000)
+                         && flashSlot.IsReady() && doFlash && !CanWardJump() && Environment.TickCount > lastWjTickMenu + 1000)
                 {
                     var castedR = spellR.CastOnUnit(rTarget);
 
@@ -389,11 +389,11 @@ namespace WreckingBall
                     if (castedR)
                     {
                         leeHero.Spellbook.CastSpell(flashSlot, flashVector);
-                        lastFlashTick = Environment.TickCount;
+                        lastFlashTickMenu = Environment.TickCount;
                     }
                 }
-                else if (leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump() && doWardjump
-                         && Environment.TickCount > lastFlashTickMenu + 2000)
+                else if (!flashSlot.IsReady() && leeHero.Distance(flashVector) < distLeeToWardjump && CanWardJump()
+                         && doWardjump && Environment.TickCount > lastFlashTickMenu + 1000)
                 {
                     WardJumpTo(flashVector);
                 }
@@ -474,7 +474,7 @@ namespace WreckingBall
         {
             var myWard = Items.GetWardSlot();
 
-            if (Environment.TickCount > lastWjTick + 200)
+            if (Environment.TickCount > lastWjTick + 650)
             {
                 if (Items.UseItem((int)myWard.Id, pos))
                 {
@@ -484,7 +484,10 @@ namespace WreckingBall
                         80,
                         () =>
                             {
-                                spellW.CastOnUnit(mostRecentWard);
+                                if (spellW.CastOnUnit(mostRecentWard))
+                                {
+                                    lastWjTickMenu = Environment.TickCount;
+                                }
                             });
                 }
             }
@@ -499,7 +502,7 @@ namespace WreckingBall
                 //Game.PrintChat(ward.Buffs[0].SourceName);
 
                 Utility.DelayAction.Add(
-                    5,
+                    10,
                     () =>
                         {
                             if (ward.Buffs.Any(x => x.SourceName == "Lee Sin"))
