@@ -42,6 +42,9 @@
     <Reference Include="SharpDX">
       <HintPath>C:\LeagueSharpLoL\System\SharpDX.dll</HintPath>
     </Reference>
+    <Reference Include="SPrediction">
+      <HintPath>C:\LeagueSharpLoL\System\SPrediction.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
