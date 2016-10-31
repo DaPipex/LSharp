@@ -1,0 +1,16 @@
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\obj\x86\Debug\PipexUtils.csprojResolveAssemblyReference.cache
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\PipexUtils.exe.config
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\PipexUtils.exe
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\PipexUtils.pdb
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\LeagueSharp.Common.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\LeagueSharp.Data.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\LeagueSharp.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\SharpDX.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\SharpDX.Direct3D9.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\clipper_library.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\LeagueSharp.Common.pdb
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\LeagueSharp.Data.pdb
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\bin\Debug\clipper_library.pdb
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\obj\x86\Debug\PipexUtils.exe
+C:\Users\Pipexlul\Documents\Visual Studio 2015\Projects\PipexAssemblies\PipexUtils\obj\x86\Debug\PipexUtils.pdb
